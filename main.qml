@@ -29,6 +29,63 @@ Window {
 
         }
 
+        Rectangle{
+            id: slab_area
+
+            x: slab_x0_line.startX
+            y: slab_y1_line.startY
+
+            width: slab_x1_line.startX - slab_x0_line.startX
+            height: slab_y0_line.startY - slab_y1_line.startY
+            color: "cyan"
+            opacity: 0.2
+
+        }
+
+        // ORIGIN AND DIRECTION LINES
+        Shape{
+            anchors.fill: parent
+
+            ShapePath{
+                id: origin_line
+
+                property real x0_pos: 8
+
+                strokeWidth: 2
+                strokeColor: "violet"
+                joinStyle: ShapePath.BevelJoin
+                capStyle: ShapePath.RoundCap
+
+                startX: cartesian_frame.interval_unit + 0 * cartesian_frame.interval_unit
+                startY: ( 9 * cartesian_frame.interval_unit - 0 * cartesian_frame.interval_unit )
+
+                PathLine{
+                    x: origin_point.x
+                    y: origin_point.y
+                }
+            }
+
+            ShapePath{
+                id: direction_line
+
+                property real x1_pos: 10
+
+                strokeWidth: 2
+                strokeColor: "royal blue"
+                joinStyle: ShapePath.BevelJoin
+                capStyle: ShapePath.RoundCap
+
+                startX: origin_point.x
+                startY: origin_point.y
+
+                PathLine{
+                    relativeX: direction_point.x
+                    relativeY: direction_point.y
+                }
+            }
+        }
+
+        // ORIGIN POINT
         Item{
             id: origin_point
             property real x_pos: 0
@@ -43,25 +100,28 @@ Window {
             }
 
             x: cartesian_frame.interval_unit + x_pos * cartesian_frame.interval_unit
-            y: ( 9 * cartesian_frame.interval_unit - y_pos * cartesian_frame.interval_unit )/* - cartesian_frame.interval_unit*/
-        }
+            y: ( 9 * cartesian_frame.interval_unit - y_pos * cartesian_frame.interval_unit )
 
-        Item{
-            id: direction_point
-            property real x_pos: 1
-            property real y_pos: 1
+            // DIRECTION POINT
+            Item{
+                id: direction_point
+                property real x_pos: 1
+                property real y_pos: 1
 
-            Rectangle{
-                anchors.centerIn: parent
-                color: "blue"
-                width: 10
-                height: 10
-                radius: 10
+                Rectangle{
+                    anchors.centerIn: parent
+                    color: "blue"
+                    width: 10
+                    height: 10
+                    radius: 10
+                }
+
+                x: x_pos * cartesian_frame.interval_unit
+                y: -y_pos * cartesian_frame.interval_unit
             }
-
-            x: cartesian_frame.interval_unit + x_pos * cartesian_frame.interval_unit
-            y: ( 9 * cartesian_frame.interval_unit - y_pos * cartesian_frame.interval_unit )/* - cartesian_frame.interval_unit*/
         }
+
+
 
         // SLAB X
         Shape{
@@ -173,6 +233,7 @@ Window {
         value: 0
         onValueChanged: {
             origin_point.x_pos = value
+            results.calculate();
         }
     }
 
@@ -191,6 +252,7 @@ Window {
 
         onValueChanged: {
             origin_point.y_pos = value
+            results.calculate();
         }
     }
 
@@ -212,11 +274,12 @@ Window {
         anchors.top: direction_text.bottom
         anchors.topMargin: 10
 
-        from: 0
-        to: 15
+        from: -10
+        to: 10
         value: 1
         onValueChanged: {
             direction_point.x_pos = value
+            results.calculate();
         }
     }
 
@@ -229,12 +292,13 @@ Window {
         anchors.top: direction_x.top
 
 
-        from: 0
-        to: 9
+        from: -10
+        to: 10
         value: 1
 
         onValueChanged: {
             direction_point.y_pos = value
+            results.calculate();
         }
     }
 
@@ -260,7 +324,8 @@ Window {
         to: x_slab_x1.value - 1
         value: 8
         onValueChanged: {
-            slab_x0_line.x0_pos = value
+            slab_x0_line.x0_pos = value;
+            results.calculate();
         }
     }
 
@@ -278,7 +343,8 @@ Window {
         value: 10
 
         onValueChanged: {
-            slab_x1_line.x1_pos = value
+            slab_x1_line.x1_pos = value;
+            results.calculate();
         }
     }
 
@@ -306,7 +372,8 @@ Window {
         to: y_slab_y1.value - 1
         value: 4
         onValueChanged: {
-            slab_y0_line.y0_pos = value
+            slab_y0_line.y0_pos = value;
+            results.calculate();
         }
     }
 
@@ -324,45 +391,157 @@ Window {
         value: 6
 
         onValueChanged: {
-            slab_y1_line.y1_pos = value
+            slab_y1_line.y1_pos = value;
+            results.calculate();
         }
     }
 
 
-    property real x0: x_slab_x0.value
-    property real x1: x_slab_x1.value
-    property real y0: y_slab_y0.value
-    property real y1: y_slab_y1.value
 
-    property real origin_x_v: origin_x.value
-    property real origin_y_v: origin_y.value
+    Column{
+        id: results
 
-    property real direction_x_v: direction_x.value - origin_x.value
-    property real direction_y_v: direction_y.value - origin_y.value
+        anchors.top: cartesian_frame.bottom
+        anchors.topMargin: 50
+        anchors.left: cartesian_frame.left
+        spacing: 8
 
-    property real t_x0: ( x0 - origin_x_v ) / direction_x_v
-    property real t_x1: ( x1 - origin_x_v ) / direction_x_v
+        property real font_size: 12
+        Text{
+            font.pixelSize: parent.font_size
+            text: "x0 : " + x_slab_x0.value
+        }
+        Text{
+            font.pixelSize: parent.font_size
+            text: "x1 : " + x_slab_x1.value
+        }
 
-    property real t_y0: ( y0 - origin_y_v ) / direction_y_v
-    property real t_y1: ( y1 - origin_y_v ) / direction_x_v
+        Text{
+            font.pixelSize: parent.font_size
+            text: "y1 : " + y_slab_y0.value
+        }
+        Text{
+            font.pixelSize: parent.font_size
+            text: "y1 : " + y_slab_y1.value
+        }
 
-    Component.onCompleted: {
-        console.log( "x0 : " + x0 );
-        console.log( "x1 : " + x1 );
-        console.log( "y0 : " + y0 );
-        console.log( "y1 : " + y1 );
+        Text{
+            font.pixelSize: parent.font_size
+            text: "Origin.x : " + origin_x.value
+        }
+        Text{
+            font.pixelSize: parent.font_size
+            text: "Origin.y : " + origin_y.value
+        }
+        Text{
+            font.pixelSize: parent.font_size
+            text: "Direction.x : " + direction_x.value
+        }
+        Text{
+            font.pixelSize: parent.font_size
+            text: "Direction.y : " + direction_y.value
+        }
 
-        console.log( "origin_x : " + origin_x_v );
-        console.log( "origin_y : " + origin_y_v );
-        console.log( "direction_x : " + direction_x_v );
-        console.log( "direction_y : " + direction_y_v );
+        Text{
+            font.pixelSize: parent.font_size
+            text: "tx0: ( x0 - Origin.x ) / Direction.x : " + parent.tx0
+        }
+        Text{
+            font.pixelSize: parent.font_size
+            text: "tx1: ( x1 - Origin.x ) / Direction.x : " + parent.tx1
+        }
+        Text{
+            font.pixelSize: parent.font_size
+            text: "ty0: ( y0 - Origin.y ) / Direction.y : " + parent.ty0
+        }
+        Text{
+            font.pixelSize: parent.font_size
+            text: "ty1: ( y1 - Origin.y ) / Direction.y : " + parent.ty1
+        }
+        Text{
+            font.pixelSize: parent.font_size
+            text: "f: min( tx0, tx1 ) : " + parent._f
+        }
+        Text{
+            font.pixelSize: parent.font_size
+            text: "F: max( ty0, ty1 ) : " + parent._F
+        }
+
+        Text{
+            font.pixelSize: parent.font_size
+            text: "Hit status : " + parent.is_hit
+        }
+
+        property real tx0: 0
+        property real tx1: 0
+        property real ty0: 0
+        property real ty1: 0
+        property real _f: 0
+        property real _F: 0
+
+        property string is_hit: ""
+
+        function calculate (){
+            var l_tx0 = ( x_slab_x0.value - origin_x.value ) / direction_x.value;
+            var l_tx1 = ( x_slab_x1.value - origin_x.value ) / direction_x.value;
+            var l_ty0 = ( y_slab_y0.value - origin_y.value ) / direction_y.value;
+            var l_ty1 = ( y_slab_y1.value - origin_y.value ) / direction_y.value;
+
+            tx0 = l_tx0;
+            tx1 = l_tx1;
+            ty0 = l_ty0;
+            ty1 = l_ty1;
+
+            var l_f = Math.min(l_tx0, l_tx1);
+            var l_F = Math.max(l_ty0, l_ty1);
+
+            _f = l_f;
+            _F = l_F;
+
+
+            if( Number.isNaN(l_f) ){
+                is_hit = "NaN"
+            }
+            else if( !(l_f < l_F) ){
+                is_hit = "no hit"
+            }
+            else if( l_f < l_F ){
+                is_hit = "hit"
+            }
+            else
+                is_hit = "?"
+        }
+
+        Component.onCompleted: {
+            var l_tx0 = ( x_slab_x0.value - origin_x.value ) / direction_x.value;
+            var l_tx1 = ( x_slab_x1.value - origin_x.value ) / direction_x.value;
+            var l_ty0 = ( y_slab_y0.value - origin_y.value ) / direction_y.value;
+            var l_ty1 = ( y_slab_y1.value - origin_y.value ) / direction_y.value;
+
+
+            tx0 = l_tx0;
+            tx1 = l_tx1;
+            ty0 = l_ty0;
+            ty1 = l_ty1;
+
+            var l_f = Math.min(l_tx0, l_tx1);
+            var l_F = Math.max(l_ty0, l_ty1);
+
+            _f = l_f;
+            _F = l_F;
+
+
+            if( Number.isNaN(l_f) ){
+                is_hit = "NaN"
+            }
+            else if( !(l_f < l_F) ){
+                is_hit = "no hit"
+            }
+            else if( l_f < l_F ){
+                is_hit = "hit"
+            }
+            else
+                is_hit = "?"
+        }
     }
-
-    onT_x0Changed: {
-        console.log( "t_x0 : " + t_x0 );
-        console.log( "t_x1 : " + t_x1 );
-        console.log( "t_y0 : " + t_y0 );
-        console.log( "t_y1 : " + t_y1 );
-    }
-
 }
